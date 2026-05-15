@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отечественный банк</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Lucida Sans Unicode', sans-serif;
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none; /* Чтобы текст не выделялся при кликах */
+        }
+
+        #app {
+            position: relative;
+            width: 500px;
+            height: 800px;
+            background: #2b2b2b;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* ФОН */
+        #bg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 0;
+            transition: background-image 0.3s ease;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            padding-top: 120px;
+            gap: 15px;
+        }
+
+        #money {
+            font-size: 28px;
+            color: #fff;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+            margin-bottom: 20px;
+        }
+
+        .game-btn {
+            background-color: #059e0c;
+            color: #fff;
+            border: none;
+            border-radius: 0;
+            width: 220px;
+            height: 100px;
+            font-size: 24px;
+            font-family: 'Lucida Sans Unicode', sans-serif;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .game-btn:hover { background-color: #04bf0d; }
+        .game-btn:active { transform: scale(0.96); }
+        .game-btn:disabled {
+            background-color: #444;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* КНОПКА КЛИКА */
+        #click-btn {
+            background-color: transparent;
+            margin-top: 40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="bg"></div>
+    <div class="content">
+        <div id="money">рубли: 0</div>
+        <button id="click-btn" class="game-btn"></button>
+        <button id="upg1" class="game-btn"></button>
+        <button id="upg2" class="game-btn">улучшение рубля (100₽)</button>
+        <button id="upg3" class="game-btn">улучшение дома (1000₽)</button>
+        <button id="upg4" class="game-btn">улучшение дома (100000₽)</button>
+        <button id="upg5" class="game-btn">улучшение дома (10000000₽)</button>
+        <button id="upg6" class="game-btn">улучшение дома (1000000000₽)</button>
+        <button id="upg7" class="game-btn">улучшение дома (1000000000000₽)</button>
+        <button id="upg8" class="game-btn">улучшение дома (1000000000000000₽)</button>
+    </div>
+</div>
+
+<script>
+    // ==================== ПЕРЕМЕННЫЕ ====================
+    let money = 0;
+    let clickPower = 1;
+    let upgradeCost = 50;
+    let bgIndex = 0;
+
+    // Массив фоновых изображений
+    const bgImages = [
+        'start.png', 'dacha.png', 'old.png', 'medium.png', 'rich.png', 'ultra_rich.png', 'sea.png', 'moon.png'
+    ];
+
+    // Ссылки на DOM-элементы
+    const moneyEl = document.getElementById('money');
+    const clickBtn = document.getElementById('click-btn');
+    const upg1Btn = document.getElementById('upg1');
+    const bgEl = document.getElementById('bg');
+    const upgradeBtns = [
+        document.getElementById('upg2'),
+        document.getElementById('upg3'),
+        document.getElementById('upg4'),
+        document.getElementById('upg5'),
+        document.getElementById('upg6'),
+        document.getElementById('upg7'),
+        document.getElementById('upg8')
+    ];
+
+    // Цены улучшений (соответствуют текстам на кнопках)
+    const upgradePrices = [100, 1000, 100000, 10000000, 1000000000, 1000000000000, 1000000000000000];
+
+    // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+    function formatNum(n) {
+        return n.toLocaleString('ru-RU');
+    }
+
+    function setBg(index) {
+        // Устанавливаем фон
+        bgEl.style.backgroundImage = `url('${bgImages[index]}')`;
+    }
+
+    function updateUI() {
+        moneyEl.textContent = `рубли: ${formatNum(money)}`;
+
+        // Кнопка улучшения клика
+        if (money >= upgradeCost) {
+            upg1Btn.disabled = false;
+            upg1Btn.textContent = `усиление клика за ${formatNum(upgradeCost)}₽`;
+        } else {
+            upg1Btn.disabled = true;
+            upg1Btn.textContent = `нужно для улучшения клика ${formatNum(upgradeCost)}₽`;
+        }
+
+        // Остальные кнопки
+        upgradeBtns.forEach((btn, i) => {
+            if (btn.classList.contains('hidden')) return;
+            btn.disabled = money < upgradePrices[i];
+        });
+    }
+
+    // ==================== ОБРАБОТЧИКИ ====================
+    clickBtn.addEventListener('click', () => {
+        money += clickPower;
+        updateUI();
+    });
+
+    upg1Btn.addEventListener('click', () => {
+        if (money >= upgradeCost) {
+            money -= upgradeCost;
+            clickPower += 1;
+            upgradeCost = Math.floor(upgradeCost * 1.5);
+            updateUI();
+        }
+    });
+
+    upgradeBtns.forEach((btn, i) => {
+        btn.addEventListener('click', () => {
+            if (money >= upgradePrices[i]) {
+                money -= upgradePrices[i];
+                btn.classList.add('hidden'); // Скрываем купленное улучшение
+                bgIndex = i + 1;
+                if (bgIndex < bgImages.length) setBg(bgIndex);
+                updateUI();
+            }
+        });
+    });
+
+    // ==================== ЗАПУСК ====================
+    setBg(0);
+    updateUI();
+</script>
+
+</body>
+</html>
